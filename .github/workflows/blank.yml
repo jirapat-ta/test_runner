@@ -1,0 +1,34 @@
+name: Android Mobile Tests
+on:
+  workflow_dispatch:
+
+jobs:
+  android-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v3
+        with:
+          java-version: "11"
+          distribution: "temurin"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Boot emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          script: |
+            adb wait-for-device
+            adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
+            echo "=== Emulator ready ==="
+            adb shell getprop ro.build.version.release
+            adb shell getprop ro.build.version.sdk
+            adb devices -l
