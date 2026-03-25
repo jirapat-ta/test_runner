@@ -36,8 +36,8 @@ jobs:
           script: |
             adb wait-for-device
             adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
-            ls -lh ./apps/app-debug.apk
-            adb install ./apps/app-debug.apk
+            ls -lh ./apps/app.apk
+            adb install ./apps/app.apk
             adb shell pm list packages | grep "com.your.package"
             mkdir -p ./screenshots 
             echo "=== Emulator ready ==="
