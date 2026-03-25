@@ -28,6 +28,7 @@ jobs:
           script: |
             adb wait-for-device
             adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
+            mkdir -p ./screenshots 
             echo "=== Emulator ready ==="
             adb shell screencap -p /sdcard/screen.png
             adb pull /sdcard/screen.png ./screenshots/screen.png
