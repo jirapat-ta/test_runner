@@ -5,7 +5,15 @@ on:
 jobs:
   android-tests:
     runs-on: ubuntu-latest
+
     steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Pull LFS files
+        run: git lfs pull    # ← ดึง APK จาก LFS มาจริงๆ
+
       - uses: actions/setup-java@v3
         with:
           java-version: "17"          # ← แก้ตรงนี้
@@ -18,7 +26,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Boot emulator
+      - name: Boot emulator + install APK
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -28,6 +36,9 @@ jobs:
           script: |
             adb wait-for-device
             adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
+            ls -lh ./apps/app-debug.apk
+            adb install ./apps/app-debug.apk
+            adb shell pm list packages | grep "com.your.package"
             mkdir -p ./screenshots 
             echo "=== Emulator ready ==="
             adb shell screencap -p /sdcard/screen.png
