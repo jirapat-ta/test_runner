@@ -39,6 +39,9 @@ jobs:
             ls -lh ./apps/app.apk
             adb install ./apps/app.apk
             adb shell pm list packages          # ← แก้ตรงนี้ เอา grep ออก
+            sleep 5
+            adb shell monkey -p com.wdiodemoapp -c android.intent.category.LAUNCHER 1
+            sleep 3
             mkdir -p ./screenshots
             echo "=== Emulator ready ==="
             adb shell screencap -p /sdcard/screen.png
