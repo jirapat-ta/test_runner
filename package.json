@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "wdio run config/wdio.conf.js",
+    "test": "wdio run config/wdio.conf.ts",
     "wdio": "wdio run ./wdio.conf.ts"
   },
   "keywords": [],
