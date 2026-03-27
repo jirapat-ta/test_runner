@@ -49,7 +49,7 @@ class LoginScreen {
      * Actions
      */
     async goToLoginScreen () {
-        await this.loginTab.waitForDisplayed();
+        await this.loginTab.waitForDisplayed({ timeout: 30000 });
         await this.loginTab.click();
     }
 

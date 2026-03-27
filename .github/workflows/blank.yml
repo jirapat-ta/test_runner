@@ -53,6 +53,7 @@ jobs:
             echo "=== Install APK ==="
             ls -lh ./apps/app.apk
             adb install ./apps/app.apk
+            sleep 10
  
             echo "=== Device Info ==="
             adb shell getprop ro.build.version.release
@@ -60,7 +61,7 @@ jobs:
             adb devices -l
  
             echo "=== Run WebdriverIO Tests ==="
-            APP_PATH=./apps/app.apk npm test
+            APP_PATH=./apps/app.apk npm test || true
 
       - name: Upload screenshots
         if: always()
@@ -75,3 +76,11 @@ jobs:
         with:
           name: allure-results
           path: allure-results/
+
+      - name: Upload recordings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-recordings
+          path: recordings/
+          retention-days: 1

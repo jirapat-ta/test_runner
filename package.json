@@ -27,6 +27,7 @@
     "@wdio/local-runner": "^8",
     "@wdio/mocha-framework": "^8",
     "@wdio/spec-reporter": "^8",
-    "@wdio/appium-service": "^8"
+    "@wdio/appium-service": "^8",
+    "@wdio/video-reporter": "^5"
   }
 }

@@ -58,7 +58,11 @@ export const config: WebdriverIO.Config = {
         'appium:deviceName': 'emulator-5554',
         'appium:platformVersion': '13.0',
         'appium:automationName': 'UiAutomator2',
-        'appium:app' : './apps/app.apk'
+        'appium:app' : './apps/app.apk',
+        'appium:newCommandTimeout': 240,    // ← เพิ่ม
+        'appium:autoGrantPermissions': true, // ← เพิ่ม
+        'appium:appWaitActivity': '*',          // ← รอให้ app activity โหลดเสร็จก่อน
+        'appium:appWaitDuration': 30000,        // ← รอสูงสุด 30 วินาที
     }],
 
     //
@@ -95,7 +99,7 @@ export const config: WebdriverIO.Config = {
     // baseUrl: 'http://localhost:8080',
     //
     // Default timeout for all waitFor* commands.
-    waitforTimeout: 10000,
+    waitforTimeout: 30000,
     //
     // Default timeout in milliseconds for request
     // if browser driver or grid doesn't send response
@@ -136,7 +140,12 @@ export const config: WebdriverIO.Config = {
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
     // see also: https://webdriver.io/docs/dot-reporter
-    reporters: ['spec'],
+    reporters: ['spec',
+  ["video", {
+    saveAllVideos: true,           // true = เก็บทุก test / false = เก็บแค่ที่ fail
+    videoSlowdownMultiplier: 3,    // ช้าลง 3x ดูง่ายขึ้น
+    outputDir: "./recordings",
+  }]],
 
     // Options to be passed to Mocha.
     // See the full list at http://mochajs.org/
