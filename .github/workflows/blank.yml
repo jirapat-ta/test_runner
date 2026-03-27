@@ -38,8 +38,8 @@ jobs:
             adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
             ls -lh ./apps/app.apk
             adb install ./apps/app.apk
-            adb shell pm list packages | grep "com.your.package"
-            mkdir -p ./screenshots 
+            adb shell pm list packages          # ← แก้ตรงนี้ เอา grep ออก
+            mkdir -p ./screenshots
             echo "=== Emulator ready ==="
             adb shell screencap -p /sdcard/screen.png
             adb pull /sdcard/screen.png ./screenshots/screen.png
