@@ -46,14 +46,36 @@ class LoginScreen {
     }
 
     /**
+     * Wait for app to be ready and in a stable state
+     */
+    async waitForAppReady() {
+        // Wait for any of the main screen elements to be displayed
+        await browser.waitUntil(
+            async () => {
+                try {
+                    const loginTab = await this.loginTab.isDisplayed();
+                    return loginTab;
+                } catch {
+                    return false;
+                }
+            },
+            { timeout: 30000, timeoutMsg: 'App did not load in time' }
+        );
+    }
+
+    /**
      * Actions
      */
     async goToLoginScreen () {
+        await this.waitForAppReady();
         await this.loginTab.waitForDisplayed({ timeout: 30000 });
         await this.loginTab.click();
+        // Wait for login screen elements to be ready after clicking the tab
+        await this.inputEmail.waitForDisplayed({ timeout: 10000 });
     }
 
     async login (email: string, password: string) {
+        await this.inputEmail.waitForDisplayed({ timeout: 10000 });
         await this.inputEmail.setValue(email);
         await this.inputPassword.setValue(password);
         await this.btnLogin.click();

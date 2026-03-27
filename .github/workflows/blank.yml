@@ -49,19 +49,28 @@ jobs:
             adb wait-for-device
             adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
             sleep 5
- 
+
             echo "=== Install APK ==="
             ls -lh ./apps/app.apk
             adb install ./apps/app.apk
-            sleep 10
- 
+
+            echo "=== Wait for app installation ==="
+            sleep 15
+
             echo "=== Device Info ==="
             adb shell getprop ro.build.version.release
             adb shell getprop ro.build.version.sdk
             adb devices -l
- 
+
+            echo "=== Clear app data before tests ==="
+            adb shell pm clear com.wdio.demo || true
+            sleep 2
+
+            echo "=== Create directories ==="
+            mkdir -p screenshots allure-results recordings
+
             echo "=== Run WebdriverIO Tests ==="
-            APP_PATH=./apps/app.apk npm test || true
+            APP_PATH=./apps/app.apk npm test
 
       - name: Upload screenshots
         if: always()

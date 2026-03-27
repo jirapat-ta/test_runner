@@ -63,6 +63,10 @@ export const config: WebdriverIO.Config = {
         'appium:autoGrantPermissions': true, // ← เพิ่ม
         'appium:appWaitActivity': '*',          // ← รอให้ app activity โหลดเสร็จก่อน
         'appium:appWaitDuration': 30000,        // ← รอสูงสุด 30 วินาที
+        'appium:appWaitPackage': '*',           // ← รอทุก package
+        'appium:noReset': false,                // ← เริ่ม app ใหม่ทุกครั้ง
+        'appium:fullReset': false,
+        'appium:ensureWebviewsHavePages': true,
     }],
 
     //
@@ -129,13 +133,13 @@ export const config: WebdriverIO.Config = {
     
     //
     // The number of times to retry the entire specfile when it fails as a whole
-    // specFileRetries: 1,
+    specFileRetries: 1,
     //
     // Delay in seconds between the spec file retry attempts
-    // specFileRetriesDelay: 0,
+    specFileRetriesDelay: 2,
     //
     // Whether or not retried spec files should be retried immediately or deferred to the end of the queue
-    // specFileRetriesDeferred: false,
+    specFileRetriesDeferred: false,
     //
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
@@ -206,8 +210,10 @@ export const config: WebdriverIO.Config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {object}         browser      instance of created browser/device session
      */
-    // before: function (capabilities, specs) {
-    // },
+    before: async function (capabilities, specs) {
+        // Wait for app to be fully loaded before any test starts
+        await browser.pause(2000); // Initial pause for app to stabilize
+    },
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {string} commandName hook command name
@@ -219,8 +225,11 @@ export const config: WebdriverIO.Config = {
      * Hook that gets executed before the suite starts
      * @param {object} suite suite details
      */
-    // beforeSuite: function (suite) {
-    // },
+    beforeSuite: async function (suite) {
+        // Ensure app is in a clean state before each suite
+        await browser.reloadSession();
+        await browser.pause(1000);
+    },
     /**
      * Function to be executed before a test (in Mocha/Jasmine) starts.
      */
@@ -248,8 +257,12 @@ export const config: WebdriverIO.Config = {
      * @param {boolean} result.passed    true if test has passed, otherwise false
      * @param {object}  result.retries   information about spec related retries, e.g. `{ attempts: 0, limit: 0 }`
      */
-    // afterTest: function(test, context, { error, result, duration, passed, retries }) {
-    // },
+    afterTest: async function(test, context, { error, result, duration, passed, retries }) {
+        if (!passed) {
+            // Take screenshot on failure
+            await browser.saveScreenshot(`./screenshots/failure-${test.title}-${Date.now()}.png`);
+        }
+    },
 
 
     /**
