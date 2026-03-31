@@ -1,10 +1,16 @@
 name: Android Mobile Tests
+
 on:
   workflow_dispatch:
 
 jobs:
   android-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      APP_PATH: ./apps/app.apk
+      APP_PACKAGE: com.wdio.demo
 
     steps:
       - uses: actions/checkout@v4
@@ -12,13 +18,19 @@ jobs:
           lfs: true
 
       - name: Pull LFS files
-        run: git lfs pull    # ← ดึง APK จาก LFS มาจริงๆ
+        run: git lfs pull
 
+      # -------------------------
+      # Java (Android requirement)
+      # -------------------------
       - uses: actions/setup-java@v3
         with:
-          java-version: "17"          # ← แก้ตรงนี้
+          java-version: "17"
           distribution: "temurin"
 
+      # -------------------------
+      # Enable KVM (for emulator performance)
+      # -------------------------
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
@@ -26,18 +38,33 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # -------------------------
+      # Node (stable LTS)
+      # -------------------------
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: "npm"
 
-      - run: npm install
+      - name: Install dependencies (clean)
+        run: npm ci
 
+      # -------------------------
+      # Appium setup
+      # -------------------------
       - name: Install Appium + UiAutomator2
         run: |
           npm install -g appium
           appium driver install uiautomator2
 
+      - name: Start Appium Server
+        run: |
+          appium > appium.log 2>&1 &
+          sleep 10
+
+      # -------------------------
+      # Emulator + Test
+      # -------------------------
       - name: Boot emulator + run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -47,38 +74,76 @@ jobs:
           profile: pixel_5
           script: |
             adb wait-for-device
+
+            echo "=== Wait for full boot ==="
             adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
-            sleep 5
+            sleep 10
+
+            echo "=== Disable animations (reduce flaky) ==="
+            adb shell settings put global window_animation_scale 0
+            adb shell settings put global transition_animation_scale 0
+            adb shell settings put global animator_duration_scale 0
+
+            adb shell input keyevent 82
+
+            echo "=== Validate APK exists ==="
+            if [ ! -f "$APP_PATH" ]; then
+              echo "APK not found at $APP_PATH"
+              exit 1
+            fi
 
             echo "=== Install APK ==="
-            ls -lh ./apps/app.apk
-            adb install ./apps/app.apk
+            adb install "$APP_PATH"
 
-            echo "=== Wait for app installation ==="
-            sleep 15
+            echo "=== Wait after install ==="
+            sleep 10
 
             echo "=== Device Info ==="
             adb shell getprop ro.build.version.release
             adb shell getprop ro.build.version.sdk
             adb devices -l
 
-            echo "=== Clear app data before tests ==="
-            adb shell pm clear com.wdio.demo || true
+            echo "=== Clear app data ==="
+            adb shell pm clear $APP_PACKAGE || true
             sleep 2
 
-            echo "=== Create directories ==="
+            echo "=== Prepare folders ==="
             mkdir -p screenshots allure-results recordings
 
-            echo "=== Run WebdriverIO Tests ==="
-            APP_PATH=./apps/app.apk npm test
+            echo "=== Run WebdriverIO Tests (retry 1x) ==="
+            APP_PATH=$APP_PATH npm test || APP_PATH=$APP_PATH npm test
 
+      # -------------------------
+      # Logs (important for debug)
+      # -------------------------
+      - name: Dump ADB logcat
+        if: always()
+        run: adb logcat -d > logcat.txt
+
+      - name: Upload logcat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logcat
+          path: logcat.txt
+
+      - name: Upload Appium logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-log
+          path: appium.log
+
+      # -------------------------
+      # Test artifacts
+      # -------------------------
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
           path: screenshots/
- 
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
