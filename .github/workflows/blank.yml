@@ -76,7 +76,7 @@ jobs:
             adb wait-for-device
 
             echo "=== Wait for full boot ==="
-            adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
+            adb shell 'while [ -z "$(getprop sys.boot_completed)" ]; do sleep 1; done'
             sleep 10
 
             echo "=== Disable animations (reduce flaky) ==="
