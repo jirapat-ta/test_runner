@@ -47,7 +47,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies (clean)
-        run: npm ci
+        run: npm install
 
       # -------------------------
       # Appium setup
@@ -113,12 +113,8 @@ jobs:
             echo "=== Run WebdriverIO Tests (retry 1x) ==="
             APP_PATH=$APP_PATH npm test || APP_PATH=$APP_PATH npm test
 
-      # -------------------------
-      # Logs (important for debug)
-      # -------------------------
-      - name: Dump ADB logcat
-        if: always()
-        run: adb logcat -d > logcat.txt
+            echo "=== Dump logcat ==="
+            adb logcat -d | grep -i "error" > logcat-error.txt
 
       - name: Upload logcat
         if: always()
